@@ -107,17 +107,15 @@ def extraer_repuestos_codigos(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(filas)
 
 #@st.cache_data
-def cargar_datos_presupuesto(archivo_excel):
-    if archivo_excel is None:
-        return None, None
-
+def cargar_datos_presupuesto(excel_bytes):
     # Hoja de presupuesto
     df_ppto_raw = pd.read_excel(
-        archivo_excel,
+        io.BytesIO(excel_bytes),
         sheet_name="SERVICIO TECNICO",
         header=None
     )
 
+    # Fila 17 de Excel = T. DPTO. TÉCNICO MEDELLIN
     fila_medellin = df_ppto_raw.iloc[16]
 
     ppto_mensual = {
@@ -127,12 +125,9 @@ def cargar_datos_presupuesto(archivo_excel):
         for i, mes in enumerate(MESES, start=2)
     }
 
-    # Volver al inicio del archivo antes de leer la segunda hoja
-    archivo_excel.seek(0)
-
     # Hoja de facturación
     df_fact = pd.read_excel(
-        archivo_excel,
+        io.BytesIO(excel_bytes),
         sheet_name="2026-"
     )
 
@@ -339,37 +334,37 @@ elif opcion_menu == "Gerencia":
 
 # MÓDULO 3: PRESUPUESTO 
 elif opcion_menu == "Presupuesto":
-    st.info( "Carga un único archivo Excel que contenga las hojas "
-            "'SERVICIO TECNICO' y '2026-'."
-    )
+    try:
+        excel_bytes = descargar_excel_drive(
+            DRIVE_FILE_ID,
+            str(DRIVE_CREDENTIALS_PATH),
+            st.session_state["drive_cache_key"]
+        )
 
-    archivo_presupuesto = st.file_uploader(
-        "Cargar Excel de Presupuesto y Facturación",
-        type=["xlsx", "xls"]
-    )
+        ppto_mensual, df_fact = cargar_datos_presupuesto(
+            excel_bytes
+        )
 
-    if archivo_presupuesto is None:
-        st.warning(
-            "El módulo requiere un archivo Excel con las hojas "
+    except ValueError as e:
+        st.error(
+            "No se pudieron encontrar las hojas necesarias. "
+            "Verifica que Google Sheets contenga las hojas "
             "'SERVICIO TECNICO' y '2026-'."
         )
         st.stop()
 
-    try:
-        ppto_mensual, df_fact = cargar_datos_presupuesto(
-            archivo_presupuesto
+    except Exception as e:
+        st.error(
+            f"Error al cargar los datos de Presupuesto desde Google Drive: {e}"
         )
+        st.stop()
+
     except ValueError as e:
         st.error(
             "No se pudieron encontrar las hojas requeridas. "
             "Verifica que el archivo contenga exactamente "
             "'SERVICIO TECNICO' y '2026-'."
         )
-        st.stop()
-
-    ppto_mensual, df_fact = cargar_datos_presupuesto(archivo_presupuesto)
-    if ppto_mensual is None or df_fact is None:
-        st.error("No se pudieron cargar los archivos de presupuesto o facturación.")
         st.stop()
 
     df_fact_2026 = df_fact[df_fact["FECHA"].dt.year == 2026].copy()
