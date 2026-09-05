@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import io
 import os
+import uuid
 from conexion_drive import descargar_excel_drive
 
 st.set_page_config(
@@ -12,6 +13,11 @@ st.set_page_config(
     page_icon="📊",
     layout="wide"
 )
+
+# Identificador único por sesión del navegador.
+# Al recargar la página se genera uno nuevo y se vuelve a descargar el Excel.
+if "drive_cache_key" not in st.session_state:
+    st.session_state["drive_cache_key"] = str(uuid.uuid4())
 
 BASE_DIR = Path(__file__).parent
 LOGO_PATH = BASE_DIR / "Logo.jpg"
@@ -160,7 +166,11 @@ def grafico_barras_agrupadas(df: pd.DataFrame, x: str, color: str, titulo: str, 
 
 if opcion_menu == "Fallas":
     try:
-        excel_bytes = descargar_excel_drive(DRIVE_FILE_ID, str(DRIVE_CREDENTIALS_PATH))
+        excel_bytes = descargar_excel_drive(
+         DRIVE_FILE_ID,
+        str(DRIVE_CREDENTIALS_PATH),
+        st.session_state["drive_cache_key"])
+                                        
         df_fallas, total_fallas_original = cargar_datos(io.BytesIO(excel_bytes))
     except Exception as e:
         st.error(f"Error al descargar la base de datos de Google Drive: {e}")
@@ -210,7 +220,11 @@ if opcion_menu == "Fallas":
 
 elif opcion_menu == "Gerencia":
     try:
-        excel_bytes = descargar_excel_drive(DRIVE_FILE_ID, str(DRIVE_CREDENTIALS_PATH))
+        excel_bytes = descargar_excel_drive(
+        DRIVE_FILE_ID,
+        str(DRIVE_CREDENTIALS_PATH),
+        st.session_state["drive_cache_key"])
+
         df_fallas, total_fallas_original = cargar_datos(io.BytesIO(excel_bytes))
     except Exception as e:
         st.error(f"Error al descargar la base de datos de Google Drive: {e}")
