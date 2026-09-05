@@ -1,6 +1,7 @@
 import io
 import os
 import json
+import uuid
 import streamlit as st
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -9,7 +10,11 @@ from googleapiclient.http import MediaIoBaseDownload
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 @st.cache_data(show_spinner="Descargando base de datos desde Google Drive...")
-def descargar_excel_drive(file_id: str, credentials_path: str = None) -> bytes:
+def descargar_excel_drive(
+    file_id: str,
+    credentials_path: str = None,
+    session_cache_key: str = ""
+) -> bytes:
     """Descarga un archivo desde Google Drive y retorna sus bytes."""
     credentials = None
     
