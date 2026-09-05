@@ -367,6 +367,10 @@ elif opcion_menu == "Presupuesto":
         )
         st.stop()
 
+    if ppto_mensual is None or df_fact is None:
+        st.error("No se pudieron cargar los datos")
+        st.stop()
+
     df_fact_2026 = df_fact[df_fact["FECHA"].dt.year == 2026].copy()
     df_fact_2026["MES_NUM"] = df_fact_2026["FECHA"].dt.month
     fact_por_mes = df_fact_2026.groupby("MES_NUM")["VALOR ANTES DE IVA"].sum()
