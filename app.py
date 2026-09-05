@@ -21,7 +21,6 @@ if "drive_cache_key" not in st.session_state:
 
 BASE_DIR = Path(__file__).parent
 LOGO_PATH = BASE_DIR / "Logo.jpg"
-PRESUPUESTO_PATH = BASE_DIR / "PLANTILLA PRESUPUESTO VENTAS ST 2026.xlsx"
 
 # Configuración Google Drive para Excel Base
 DRIVE_FILE_ID = os.environ.get(
@@ -108,20 +107,41 @@ def extraer_repuestos_codigos(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(filas)
 
 #@st.cache_data
-def cargar_datos_presupuesto(ruta_ppto: Path, archivo_facturacion):
-    if not ruta_ppto.exists() or archivo_facturacion is None:
+def cargar_datos_presupuesto(archivo_excel):
+    if archivo_excel is None:
         return None, None
 
-    df_ppto_raw = pd.read_excel(ruta_ppto, sheet_name="SERVICIO TECNICO", header=None)
-    fila_medellin = df_ppto_raw.iloc[16]  # Fila 17 de Excel = "T. DPTO. TÉCNICO MEDELLIN"
+    # Hoja de presupuesto
+    df_ppto_raw = pd.read_excel(
+        archivo_excel,
+        sheet_name="SERVICIO TECNICO",
+        header=None
+    )
+
+    fila_medellin = df_ppto_raw.iloc[16]
+
     ppto_mensual = {
-        mes: float(fila_medellin.iloc[i]) if pd.notna(fila_medellin.iloc[i]) else 0.0
+        mes: float(fila_medellin.iloc[i])
+        if pd.notna(fila_medellin.iloc[i])
+        else 0.0
         for i, mes in enumerate(MESES, start=2)
     }
 
-    df_fact = pd.read_excel(archivo_facturacion, sheet_name="2026-")
+    # Volver al inicio del archivo antes de leer la segunda hoja
+    archivo_excel.seek(0)
+
+    # Hoja de facturación
+    df_fact = pd.read_excel(
+        archivo_excel,
+        sheet_name="2026-"
+    )
+
     df_fact.columns = df_fact.columns.str.strip()
-    df_fact["FECHA"] = pd.to_datetime(df_fact["FECHA"], errors="coerce")
+
+    df_fact["FECHA"] = pd.to_datetime(
+        df_fact["FECHA"],
+        errors="coerce"
+    )
 
     return ppto_mensual, df_fact
 
@@ -167,7 +187,7 @@ def grafico_barras_agrupadas(df: pd.DataFrame, x: str, color: str, titulo: str, 
 if opcion_menu == "Fallas":
     try:
         excel_bytes = descargar_excel_drive(
-         DRIVE_FILE_ID,
+        DRIVE_FILE_ID,
         str(DRIVE_CREDENTIALS_PATH),
         st.session_state["drive_cache_key"])
                                         
@@ -319,14 +339,35 @@ elif opcion_menu == "Gerencia":
 
 # MÓDULO 3: PRESUPUESTO 
 elif opcion_menu == "Presupuesto":
-    st.info("Para visualizar este módulo, por favor sube el archivo Excel de Facturación.")
-    archivo_facturacion = st.file_uploader("Cargar Excel de Facturación", type=["xlsx", "xls"])
-    
-    if archivo_facturacion is None:
-        st.warning("El módulo de Presupuesto requiere el archivo de facturación.")
+    st.info( "Carga un único archivo Excel que contenga las hojas "
+            "'SERVICIO TECNICO' y '2026-'."
+    )
+
+    archivo_presupuesto = st.file_uploader(
+        "Cargar Excel de Presupuesto y Facturación",
+        type=["xlsx", "xls"]
+    )
+
+    if archivo_presupuesto is None:
+        st.warning(
+            "El módulo requiere un archivo Excel con las hojas "
+            "'SERVICIO TECNICO' y '2026-'."
+        )
         st.stop()
 
-    ppto_mensual, df_fact = cargar_datos_presupuesto(PRESUPUESTO_PATH, archivo_facturacion)
+    try:
+        ppto_mensual, df_fact = cargar_datos_presupuesto(
+            archivo_presupuesto
+        )
+    except ValueError as e:
+        st.error(
+            "No se pudieron encontrar las hojas requeridas. "
+            "Verifica que el archivo contenga exactamente "
+            "'SERVICIO TECNICO' y '2026-'."
+        )
+        st.stop()
+
+    ppto_mensual, df_fact = cargar_datos_presupuesto(archivo_presupuesto)
     if ppto_mensual is None or df_fact is None:
         st.error("No se pudieron cargar los archivos de presupuesto o facturación.")
         st.stop()
