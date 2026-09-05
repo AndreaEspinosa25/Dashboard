@@ -5,4 +5,5 @@ secondaryBackgroundColor = "#ABC6DB"  # celeste muy suave para sidebar/tarjetas
 textColor = "#0F4883"                 # azul marino, igual al del texto "LAMUELA"
 font = "sans serif"
 
-
+[secrets]
+files = ["/etc/secrets/secrets.toml", ".streamlit/secrets.toml"]
