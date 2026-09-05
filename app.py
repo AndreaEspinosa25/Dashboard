@@ -18,7 +18,11 @@ LOGO_PATH = BASE_DIR / "Logo.jpg"
 PRESUPUESTO_PATH = BASE_DIR / "PLANTILLA PRESUPUESTO VENTAS ST 2026.xlsx"
 
 # Configuración Google Drive para Excel Base
-DRIVE_FILE_ID = os.environ.get("DRIVE_FILE_ID", "1ubI7JOJ4Qj8eghNEk8zZmHr8sg8we5EjAQkgTsyItzc")
+if "drive" in st.secrets and "file_id" in st.secrets["drive"]:
+    DRIVE_FILE_ID = st.secrets["drive"]["file_id"]
+else:
+    DRIVE_FILE_ID = os.environ.get("DRIVE_FILE_ID", "1ubI7JOJ4Qj8eghNEk8zZmHr8sg8we5EjAQkgTsyItzc")
+
 DRIVE_CREDENTIALS_PATH = BASE_DIR / "service-account.json"
 
 MESES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
