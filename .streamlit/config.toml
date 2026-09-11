@@ -1,8 +1,8 @@
 [theme]
-primaryColor = "#F0B308"             # dorado, para elementos activos/acento
-backgroundColor = "#FFFFFF"           # fondo blanco
-secondaryBackgroundColor = "#ABC6DB"  # celeste muy suave para sidebar/tarjetas
-textColor = "#0F4883"                 # azul marino, igual al del texto "LAMUELA"
+primaryColor = "#F0B308"             
+backgroundColor = "#FFFFFF"           
+secondaryBackgroundColor = "#ABC6DB"  
+textColor = "#0F4883"                 
 font = "sans serif"
 
 [secrets]
