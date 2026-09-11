@@ -58,7 +58,7 @@ def normalizar_texto(col):
 
 #@st.cache_data
 def cargar_datos(archivo_excel):
-    """Lee TABLA_FALLAS, separa categorías múltiples y normaliza texto."""
+    
     if isinstance(archivo_excel, Path) and not archivo_excel.exists():
         return None, 0
 
@@ -83,9 +83,9 @@ def cargar_datos(archivo_excel):
     return df, total_original
 
 
-#@st.cache_data
+
 def extraer_repuestos_codigos(df: pd.DataFrame) -> pd.DataFrame:
-    #"""REPUESTOS y CODIGO vienen separados por ';' y emparejados por posición."""
+   
     if df.empty or "REPUESTOS" not in df.columns or "CODIGO" not in df.columns:
         return pd.DataFrame(columns=["EQUIPO", "CODIGO", "REPUESTO", "OTT"])
 
@@ -106,7 +106,7 @@ def extraer_repuestos_codigos(df: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(filas)
 
-#@st.cache_data
+
 def cargar_datos_presupuesto(excel_bytes):
     # Hoja de presupuesto
     df_ppto_raw = pd.read_excel(
